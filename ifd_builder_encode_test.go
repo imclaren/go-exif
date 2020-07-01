@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
+	exifcommon "github.com/imclaren/go-exif/common"
 )
 
 func Test_ByteWriter_writeAsBytes_uint8(t *testing.T) {
@@ -789,7 +789,12 @@ func Test_IfdByteEncoder_EncodeToExif_WithChildAndSibling(t *testing.T) {
 
 	// Parse.
 
-	_, index, err := Collect(im, ti, exifData)
+	r := bytes.NewReader(exifData)
+	es, err := NewExifScanner(r, int64(len(exifData)))
+	log.PanicIf(err)
+
+	//_, index, err := Collect(im, ti, exifData)
+	_, index, err := Collect(im, ti, es)
 	log.PanicIf(err)
 
 	tagsDump := index.RootIfd.DumpTree()
@@ -873,7 +878,12 @@ func ExampleIfdByteEncoder_EncodeToExif() {
 
 	// Parse it so we can see it.
 
-	_, index, err := Collect(im, ti, exifData)
+	r := bytes.NewReader(exifData)
+	es, err := NewExifScanner(r, int64(len(exifData)))
+	log.PanicIf(err)
+
+	//_, index, err := Collect(im, ti, exifData)
+	_, index, err := Collect(im, ti, es)
 	log.PanicIf(err)
 
 	for i, ite := range index.RootIfd.Entries {

@@ -37,25 +37,11 @@ func TestVisit(t *testing.T) {
 
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	fi, err := f.Stat()
 	log.PanicIf(err)
 
-	// Search for the beginning of the EXIF information. The EXIF is near the
-	// very beginning of our/most JPEGs, so this has a very low cost.
-
-	foundAt := -1
-	for i := 0; i < len(data); i++ {
-		if _, err := ParseExifHeader(data[i:]); err == nil {
-			foundAt = i
-			break
-		} else if log.Is(err, ErrNoExif) == false {
-			log.Panic(err)
-		}
-	}
-
-	if foundAt == -1 {
-		log.Panicf("EXIF start not found")
-	}
+	es, err := NewExifScanner(f, fi.Size())
+	log.PanicIf(err)
 
 	// Run the parse.
 
@@ -95,7 +81,7 @@ func TestVisit(t *testing.T) {
 		return nil
 	}
 
-	_, furthestOffset, err := Visit(exifcommon.IfdStandardIfdIdentity, im, ti, data[foundAt:], visitor)
+	_, furthestOffset, err := Visit(exifcommon.IfdStandardIfdIdentity, im, ti, es, visitor)
 	log.PanicIf(err)
 
 	if furthestOffset != 32935 {
@@ -251,8 +237,18 @@ func TestCollect(t *testing.T) {
 
 	testImageFilepath := getTestImageFilepath()
 
-	rawExif, err := SearchFileAndExtractExif(testImageFilepath)
+	f, err := os.Open(testImageFilepath)
 	log.PanicIf(err)
+	defer f.Close()
+	fi, err := f.Stat()
+	log.PanicIf(err)
+	es, err := NewExifScanner(f, fi.Size())
+	log.PanicIf(err)
+
+	/*
+		rawExif, err := SearchFileAndExtractExif(testImageFilepath)
+		log.PanicIf(err)
+	*/
 
 	im := NewIfdMapping()
 
@@ -261,7 +257,8 @@ func TestCollect(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	_, index, err := Collect(im, ti, rawExif)
+	//_, index, err := Collect(im, ti, rawExif)
+	_, index, err := Collect(im, ti, es)
 	log.PanicIf(err)
 
 	rootIfd := index.RootIfd

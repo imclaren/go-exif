@@ -1,15 +1,16 @@
 package exif
 
 import (
+	"bytes"
 	"path"
 	"reflect"
 	"testing"
 
 	"io/ioutil"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
+	exifcommon "github.com/imclaren/go-exif/common"
 )
 
 var (
@@ -98,7 +99,12 @@ func validateExifSimpleTestIb(exifData []byte, t *testing.T) {
 
 	ti := NewTagIndex()
 
-	eh, index, err := Collect(im, ti, exifData)
+	r := bytes.NewReader(exifData)
+	es, err := NewExifScanner(r, int64(len(exifData)))
+	log.PanicIf(err)
+
+	//eh, index, err := Collect(im, ti, exifData)
+	eh, index, err := Collect(im, ti, es)
 	log.PanicIf(err)
 
 	if eh.ByteOrder != exifcommon.TestDefaultByteOrder {

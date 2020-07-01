@@ -54,8 +54,6 @@ func SearchAndExtractExif(data []byte) (rawExif []byte, err error) {
 		}
 	}()
 
-	//buf := bytes.NewBuffer(data)
-
 	r := bytes.NewReader(data)
 
 	rawExif, err = SearchAndExtractExifWithReadSeeker(r, int64(len(data)))
@@ -164,14 +162,20 @@ func ParseExifHeader(data []byte) (eh ExifHeader, err error) {
 }
 
 // Visit recursively invokes a callback for every tag.
-func Visit(rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, exifData []byte, visitor TagVisitorFn) (eh ExifHeader, furthestOffset uint32, err error) {
+func Visit(rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner, visitor TagVisitorFn) (eh ExifHeader, furthestOffset uint32, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
 		}
 	}()
 
-	eh, err = ParseExifHeader(exifData)
+	window, err := es.Peek(ExifSignatureLength)
+	log.PanicIf(err)
+
+	eh, err = ParseExifHeader(window)
+	log.PanicIf(err)
+
+	exifData, err := es.ReadAll()
 	log.PanicIf(err)
 
 	ie := NewIfdEnumerate(ifdMapping, tagIndex, exifData, eh.ByteOrder)
@@ -185,14 +189,20 @@ func Visit(rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMa
 }
 
 // Collect recursively builds a static structure of all IFDs and tags.
-func Collect(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, exifData []byte) (eh ExifHeader, index IfdIndex, err error) {
+func Collect(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner) (eh ExifHeader, index IfdIndex, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
 		}
 	}()
 
-	eh, err = ParseExifHeader(exifData)
+	window, err := es.Peek(ExifSignatureLength)
+	log.PanicIf(err)
+
+	eh, err = ParseExifHeader(window)
+	log.PanicIf(err)
+
+	exifData, err := es.ReadAll()
 	log.PanicIf(err)
 
 	ie := NewIfdEnumerate(ifdMapping, tagIndex, exifData, eh.ByteOrder)

@@ -1,6 +1,7 @@
 package exif
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 	"reflect"
@@ -8,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
-	"github.com/imclaren/go-exif/undefined"
+	exifcommon "github.com/imclaren/go-exif/common"
+	exifundefined "github.com/imclaren/go-exif/undefined"
 )
 
 var (
@@ -138,14 +139,24 @@ func (et ExifTag) String() string {
 // RELEASE(dustin): In the next release, add an options struct to Scan() and GetFlatExifData(), and put the MiscellaneousExifData in the return.
 
 // GetFlatExifData returns a simple, flat representation of all tags.
-func GetFlatExifData(exifData []byte) (exifTags []ExifTag, err error) {
+func GetFlatExifData(exifDataIn []byte) (exifTags []ExifTag, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
 		}
 	}()
 
-	eh, err := ParseExifHeader(exifData)
+	r := bytes.NewReader(exifDataIn)
+	es, err := NewExifScanner(r, int64(len(exifDataIn)))
+	log.PanicIf(err)
+
+	window, err := es.Peek(ExifSignatureLength)
+	log.PanicIf(err)
+
+	eh, err := ParseExifHeader(window)
+	log.PanicIf(err)
+
+	exifData, err := es.ReadAll()
 	log.PanicIf(err)
 
 	im := NewIfdMappingWithStandard()
