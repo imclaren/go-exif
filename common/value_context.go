@@ -37,6 +37,43 @@ type ValueContext struct {
 	tagId   uint16
 }
 
+
+// AddressableBytesRequired returns the addressableData required or the size of the byte slice that is required.
+func AddressableBytesRequired(unitCount, valueOffset uint32, rawValueOffset, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int, err error) 
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
+
+	vc := ValueContext{
+		unitCount:       unitCount,
+		valueOffset:     valueOffset,
+		rawValueOffset:  rawValueOffset,
+		addressableData: nil,
+
+		tagType:   tagType,
+		byteOrder: byteOrder,
+
+		ifdPath: "",
+		tagId:   0,
+	} 
+
+	tagType := vc.effectiveValueType()
+
+	unitSizeRaw := uint32(tagType.Size())
+
+	if vc.isEmbedded() == true {
+		byteLength := unitSizeRaw * vc.unitCount
+		return vc.rawValueOffset[:byteLength], 0, nil
+	}
+
+	return nil, vc.unitCount*unitSizeRaw], nil
+}
+
+
+
+
 // TODO(dustin): We can update newValueContext() to derive `valueOffset` itself (from `rawValueOffset`).
 
 // NewValueContext returns a new ValueContext struct.
