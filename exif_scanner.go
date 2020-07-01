@@ -30,15 +30,12 @@ func NewExifScanner(r io.ReadSeeker, size int64) (es *ExifScanner, err error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Scan for exif
 	es = &ExifScanner{
 		r:    r,
 		Size: size,
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	for {
 		window, err := es.Peek(ExifSignatureLength)
 		if err != nil {
@@ -72,11 +69,6 @@ func NewExifScanner(r io.ReadSeeker, size int64) (es *ExifScanner, err error) {
 	}
 
 	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", es.Start)
-
-	//rawExif, err = es.ReadAll()
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	return es, nil
 }

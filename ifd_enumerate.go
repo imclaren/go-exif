@@ -82,19 +82,20 @@ type byteParser struct {
 
 func newByteParser(es *ExifScanner, addressableData []byte, byteOrder binary.ByteOrder, ifdOffset uint32) (bp *byteParser, err error) {
 
-	if addressableData == nil {
+	if addressableData != nil {
 
-		// Using es
+		// Using addressableData bytes
+		if ifdOffset >= uint32(len(addressableData)) {
+			return nil, ErrOffsetInvalid
+		}
+
+	} else {
+
+		// Using ExifScanner
 		addressableData, err = es.PeekAll()
 		log.PanicIf(err)
 
 		if ifdOffset >= uint32(es.Remaining()) {
-			return nil, ErrOffsetInvalid
-		}
-	} else {
-
-		// Not using es
-		if ifdOffset >= uint32(len(addressableData)) {
 			return nil, ErrOffsetInvalid
 		}
 	}
@@ -114,29 +115,10 @@ func newByteParser(es *ExifScanner, addressableData []byte, byteOrder binary.Byt
 // accumulator (which allows us to know how far to seek to the beginning of the
 // next IFD when it's time to jump).
 func (bp *byteParser) getUint16() (value uint16, raw []byte, err error) {
-	defer func() {
-		if state := recover(); state != nil {
-			err = log.Wrap(state.(error))
-		}
-	}()
-
-	// TODO(dustin): Add test
-
-	needBytes := 2
-	offset := 0
-	raw = make([]byte, needBytes)
-
-	for offset < needBytes {
-		n, err := bp.buffer.Read(raw[offset:])
-		log.PanicIf(err)
-
-		offset += n
-	}
+	raw, err = bp.getRawUint(2)
+	log.PanicIf(err)
 
 	value = bp.byteOrder.Uint16(raw)
-
-	bp.currentOffset += uint32(needBytes)
-
 	return value, raw, nil
 }
 
@@ -144,6 +126,14 @@ func (bp *byteParser) getUint16() (value uint16, raw []byte, err error) {
 // accumulator (which allows us to know how far to seek to the beginning of the
 // next IFD when it's time to jump).
 func (bp *byteParser) getUint32() (value uint32, raw []byte, err error) {
+	raw, err = bp.getRawUint(4)
+	log.PanicIf(err)
+
+	value = bp.byteOrder.Uint32(raw)
+	return value, raw, nil
+}
+
+func (bp *byteParser) getRawUint(needBytes int) (raw []byte, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -152,7 +142,6 @@ func (bp *byteParser) getUint32() (value uint32, raw []byte, err error) {
 
 	// TODO(dustin): Add test
 
-	needBytes := 4
 	offset := 0
 	raw = make([]byte, needBytes)
 
@@ -163,11 +152,9 @@ func (bp *byteParser) getUint32() (value uint32, raw []byte, err error) {
 		offset += n
 	}
 
-	value = bp.byteOrder.Uint32(raw)
-
 	bp.currentOffset += uint32(needBytes)
 
-	return value, raw, nil
+	return raw, nil
 }
 
 // CurrentOffset returns the starting offset but the number of bytes that we
