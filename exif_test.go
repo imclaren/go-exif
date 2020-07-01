@@ -218,8 +218,7 @@ func TestSearchAndExtractExif(t *testing.T) {
 	}
 }
 
-/*
-func TestSearchAndExtractExifWithReader(t *testing.T) {
+func TestSearchAndExtractExifWithReadSeeker(t *testing.T) {
 	testImageFilepath := getTestImageFilepath()
 
 	f, err := os.Open(testImageFilepath)
@@ -227,7 +226,10 @@ func TestSearchAndExtractExifWithReader(t *testing.T) {
 
 	defer f.Close()
 
-	rawExif, err := SearchAndExtractExifWithReader(f)
+	fi, err := f.Stat()
+	log.PanicIf(err)
+
+	rawExif, err := SearchAndExtractExifWithReadSeeker(f, fi.Size())
 	log.PanicIf(err)
 
 	testExifData := getTestExifData()
@@ -236,7 +238,6 @@ func TestSearchAndExtractExifWithReader(t *testing.T) {
 		t.Fatalf("found EXIF data not correct")
 	}
 }
-*/
 
 func TestCollect(t *testing.T) {
 	defer func() {
