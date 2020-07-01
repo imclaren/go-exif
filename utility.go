@@ -156,13 +156,10 @@ func GetFlatExifData(exifDataIn []byte) (exifTags []ExifTag, err error) {
 	eh, err := ParseExifHeader(window)
 	log.PanicIf(err)
 
-	exifData, err := es.ReadAll()
-	log.PanicIf(err)
-
 	im := NewIfdMappingWithStandard()
 	ti := NewTagIndex()
 
-	ie := NewIfdEnumerate(im, ti, exifData, eh.ByteOrder)
+	ie := NewIfdEnumerate(im, ti, es, eh.ByteOrder)
 
 	exifTags = make([]ExifTag, 0)
 

@@ -10,10 +10,10 @@ import (
 
 	"encoding/binary"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
-	"github.com/imclaren/go-exif/undefined"
+	exifcommon "github.com/imclaren/go-exif/common"
+	exifundefined "github.com/imclaren/go-exif/undefined"
 )
 
 var (
@@ -167,7 +167,8 @@ func (bp *byteParser) CurrentOffset() uint32 {
 // IfdEnumerate is the main enumeration type. It knows how to parse the IFD
 // containers in the EXIF blob.
 type IfdEnumerate struct {
-	exifData       []byte
+	exifData []byte
+	//es             *ExifScanner
 	buffer         *bytes.Buffer
 	byteOrder      binary.ByteOrder
 	tagIndex       *TagIndex
@@ -176,7 +177,20 @@ type IfdEnumerate struct {
 }
 
 // NewIfdEnumerate returns a new instance of IfdEnumerate.
-func NewIfdEnumerate(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, exifData []byte, byteOrder binary.ByteOrder) *IfdEnumerate {
+func NewIfdEnumerate(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner, byteOrder binary.ByteOrder) *IfdEnumerate {
+
+	exifData, err := es.ReadAll()
+	log.PanicIf(err)
+
+	return &IfdEnumerate{
+		exifData:   exifData,
+		buffer:     bytes.NewBuffer(exifData),
+		byteOrder:  byteOrder,
+		ifdMapping: ifdMapping,
+		tagIndex:   tagIndex,
+	}
+}
+func NewIfdEnumerateBytes(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, exifData []byte, byteOrder binary.ByteOrder) *IfdEnumerate {
 	return &IfdEnumerate{
 		exifData:   exifData,
 		buffer:     bytes.NewBuffer(exifData),
@@ -1394,7 +1408,7 @@ func ParseOneIfd(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, ii *exif
 		}
 	}()
 
-	ie := NewIfdEnumerate(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
+	ie := NewIfdEnumerateBytes(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
 
 	bp, err := newByteParser(ifdBlock, byteOrder, 0)
 	if err != nil {
@@ -1419,7 +1433,7 @@ func ParseOneTag(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, ii *exif
 		}
 	}()
 
-	ie := NewIfdEnumerate(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
+	ie := NewIfdEnumerateBytes(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
 
 	bp, err := newByteParser(tagBlock, byteOrder, 0)
 	if err != nil {
