@@ -39,7 +39,7 @@ type ValueContext struct {
 
 
 // AddressableBytesRequired returns the addressableData required or the size of the byte slice that is required.
-func AddressableBytesRequired(unitCount, valueOffset uint32, rawValueOffset, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int, err error) 
+func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int, err error) 
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
