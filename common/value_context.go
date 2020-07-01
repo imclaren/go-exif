@@ -64,10 +64,11 @@ func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType Ta
 
 	if vc.isEmbedded() == true {
 		byteLength := unitSizeRaw * vc.unitCount
-		return vc.rawValueOffset[:byteLength], 0
+		addressableData = vc.rawValueOffset[:byteLength]
+		return addressableData, len(addressableData)
 	}
 
-	return nil, vc.unitCount*unitSizeRaw]
+	return nil, vc.unitCount*unitSizeRaw
 }
 
 // TODO(dustin): We can update newValueContext() to derive `valueOffset` itself (from `rawValueOffset`).
