@@ -1,7 +1,6 @@
 package exif
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -9,11 +8,10 @@ import (
 	"os"
 
 	"encoding/binary"
-	"io/ioutil"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
+	exifcommon "github.com/imclaren/go-exif/common"
 )
 
 const (
@@ -56,9 +54,11 @@ func SearchAndExtractExif(data []byte) (rawExif []byte, err error) {
 		}
 	}()
 
-	b := bytes.NewBuffer(data)
+	//buf := bytes.NewBuffer(data)
 
-	rawExif, err = SearchAndExtractExifWithReader(b)
+	r := bytes.NewReader(data)
+
+	rawExif, err = SearchAndExtractExifWithReadSeeker(r, int64(len(data)))
 	if err != nil {
 		if err == ErrNoExif {
 			return nil, err
@@ -70,10 +70,9 @@ func SearchAndExtractExif(data []byte) (rawExif []byte, err error) {
 	return rawExif, nil
 }
 
-// SearchAndExtractExifWithReader searches for an EXIF blob using an
-// `io.Reader`. We can't know how much long the EXIF data is without parsing it,
-// so this will likely grab up a lot of the image-data, too.
-func SearchAndExtractExifWithReader(r io.Reader) (rawExif []byte, err error) {
+// SearchAndExtractExifWithReadSeeker searches for an EXIF blob using an
+// `io.ReadSeeker`.
+func SearchAndExtractExifWithReadSeeker(r io.ReadSeeker, size int64) (rawExif []byte, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -84,11 +83,11 @@ func SearchAndExtractExifWithReader(r io.Reader) (rawExif []byte, err error) {
 	// beginning of most JPEGs, so this likely doesn't have a high cost (at
 	// least, again, with JPEGs).
 
-	br := bufio.NewReader(r)
-	discarded := 0
+	rs, err := NewExifScanner(r, size)
+	log.PanicIf(err)
 
 	for {
-		window, err := br.Peek(ExifSignatureLength)
+		window, err := rs.Peek(ExifSignatureLength)
 		if err != nil {
 			if err == io.EOF {
 				return nil, ErrNoExif
@@ -102,10 +101,10 @@ func SearchAndExtractExifWithReader(r io.Reader) (rawExif []byte, err error) {
 			if log.Is(err, ErrNoExif) == true {
 				// No EXIF. Move forward by one byte.
 
-				_, err := br.Discard(1)
+				_, err := rs.Discard(1)
 				log.PanicIf(err)
 
-				discarded++
+				rs.Start++
 
 				continue
 			}
@@ -117,9 +116,9 @@ func SearchAndExtractExifWithReader(r io.Reader) (rawExif []byte, err error) {
 		break
 	}
 
-	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", discarded)
+	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", rs.Start)
 
-	rawExif, err = ioutil.ReadAll(br)
+	rawExif, err = rs.ReadAll()
 	log.PanicIf(err)
 
 	return rawExif, nil
@@ -142,7 +141,10 @@ func SearchFileAndExtractExif(filepath string) (rawExif []byte, err error) {
 
 	defer f.Close()
 
-	rawExif, err = SearchAndExtractExifWithReader(f)
+	fi, err := f.Stat()
+	log.PanicIf(err)
+
+	rawExif, err = SearchAndExtractExifWithReadSeeker(f, fi.Size())
 	log.PanicIf(err)
 
 	return rawExif, nil

@@ -11,9 +11,9 @@ import (
 	"encoding/binary"
 	"io/ioutil"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
+	exifcommon "github.com/imclaren/go-exif/common"
 )
 
 func TestVisit(t *testing.T) {
@@ -218,6 +218,7 @@ func TestSearchAndExtractExif(t *testing.T) {
 	}
 }
 
+/*
 func TestSearchAndExtractExifWithReader(t *testing.T) {
 	testImageFilepath := getTestImageFilepath()
 
@@ -235,6 +236,7 @@ func TestSearchAndExtractExifWithReader(t *testing.T) {
 		t.Fatalf("found EXIF data not correct")
 	}
 }
+*/
 
 func TestCollect(t *testing.T) {
 	defer func() {
