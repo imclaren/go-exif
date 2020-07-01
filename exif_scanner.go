@@ -81,6 +81,10 @@ func NewExifScanner(r io.ReadSeeker, size int64) (es *ExifScanner, err error) {
 	return es, nil
 }
 
+func (es *ExifScanner) Remaining() int64 {
+	return es.Size - es.current
+}
+
 func (es *ExifScanner) Read(p []byte) (n int, err error) {
 	n, err = es.r.Read(p)
 	es.current += int64(n)
@@ -98,6 +102,16 @@ func (es *ExifScanner) Peek(n int64) (b []byte, err error) {
 	b = make([]byte, n)
 	readN, err := es.Read(b)
 	es.current += int64(readN)
+	if err != nil {
+		return b, err
+	}
+	es.current, err = es.r.Seek(oldCurrent, io.SeekStart)
+	return b, err
+}
+
+func (es *ExifScanner) PeekAll() (b []byte, err error) {
+	oldCurrent := es.current
+	b, err = es.ReadAll()
 	if err != nil {
 		return b, err
 	}

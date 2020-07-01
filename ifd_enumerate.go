@@ -74,25 +74,37 @@ var (
 // statically-sized records. So, the tags (though notnecessarily their values)
 // are fairly simple to enumerate.
 type byteParser struct {
-	byteOrder       binary.ByteOrder
-	addressableData []byte
-	ifdOffset       uint32
-	buffer          *bytes.Buffer
-	currentOffset   uint32
+	byteOrder     binary.ByteOrder
+	ifdOffset     uint32
+	buffer        *bytes.Buffer
+	currentOffset uint32
 }
 
-func newByteParser(addressableData []byte, byteOrder binary.ByteOrder, ifdOffset uint32) (bp *byteParser, err error) {
-	if ifdOffset >= uint32(len(addressableData)) {
-		return nil, ErrOffsetInvalid
+func newByteParser(es *ExifScanner, addressableData []byte, byteOrder binary.ByteOrder, ifdOffset uint32) (bp *byteParser, err error) {
+
+	if addressableData == nil {
+
+		// Using es
+		addressableData, err = es.PeekAll()
+		log.PanicIf(err)
+
+		if ifdOffset >= uint32(es.Remaining()) {
+			return nil, ErrOffsetInvalid
+		}
+	} else {
+
+		// Not using es
+		if ifdOffset >= uint32(len(addressableData)) {
+			return nil, ErrOffsetInvalid
+		}
 	}
 
 	// TODO(dustin): Add test
 
 	bp = &byteParser{
-		addressableData: addressableData,
-		byteOrder:       byteOrder,
-		buffer:          bytes.NewBuffer(addressableData[ifdOffset:]),
-		currentOffset:   ifdOffset,
+		byteOrder:     byteOrder,
+		buffer:        bytes.NewBuffer(addressableData[ifdOffset:]),
+		currentOffset: ifdOffset,
 	}
 
 	return bp, nil
@@ -167,8 +179,7 @@ func (bp *byteParser) CurrentOffset() uint32 {
 // IfdEnumerate is the main enumeration type. It knows how to parse the IFD
 // containers in the EXIF blob.
 type IfdEnumerate struct {
-	exifData []byte
-	//es             *ExifScanner
+	es             *ExifScanner
 	buffer         *bytes.Buffer
 	byteOrder      binary.ByteOrder
 	tagIndex       *TagIndex
@@ -179,20 +190,21 @@ type IfdEnumerate struct {
 // NewIfdEnumerate returns a new instance of IfdEnumerate.
 func NewIfdEnumerate(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner, byteOrder binary.ByteOrder) *IfdEnumerate {
 
-	exifData, err := es.ReadAll()
+	exifData, err := es.PeekAll()
 	log.PanicIf(err)
 
 	return &IfdEnumerate{
-		exifData:   exifData,
+		es:         es,
 		buffer:     bytes.NewBuffer(exifData),
 		byteOrder:  byteOrder,
 		ifdMapping: ifdMapping,
 		tagIndex:   tagIndex,
 	}
 }
-func NewIfdEnumerateBytes(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, exifData []byte, byteOrder binary.ByteOrder) *IfdEnumerate {
+func NewIfdEnumerateEmpty(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, byteOrder binary.ByteOrder) *IfdEnumerate {
+	exifData := make([]byte, 0)
 	return &IfdEnumerate{
-		exifData:   exifData,
+		es:         nil,
 		buffer:     bytes.NewBuffer(exifData),
 		byteOrder:  byteOrder,
 		ifdMapping: ifdMapping,
@@ -209,7 +221,8 @@ func (ie *IfdEnumerate) getByteParser(ifdOffset uint32) (bp *byteParser, err err
 
 	bp, err =
 		newByteParser(
-			ie.exifData[ExifAddressableAreaStart:],
+			ie.es,
+			nil,
 			ie.byteOrder,
 			ifdOffset)
 
@@ -254,6 +267,12 @@ func (ie *IfdEnumerate) parseTag(ii *exifcommon.IfdIdentity, tagPosition int, bp
 		log.Panic(ErrTagTypeNotValid)
 	}
 
+	exifData := make([]byte, 0)
+	if ie.es != nil {
+		exifData, err = ie.es.PeekAll()
+		log.PanicIf(err)
+	}
+
 	ite = newIfdTagEntry(
 		ii,
 		tagId,
@@ -262,7 +281,7 @@ func (ie *IfdEnumerate) parseTag(ii *exifcommon.IfdIdentity, tagPosition int, bp
 		unitCount,
 		valueOffset,
 		rawValueOffset,
-		ie.exifData[ExifAddressableAreaStart:],
+		exifData[ExifAddressableAreaStart:],
 		ie.byteOrder)
 
 	ifdPath := ii.UnindexedString()
@@ -1408,9 +1427,9 @@ func ParseOneIfd(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, ii *exif
 		}
 	}()
 
-	ie := NewIfdEnumerateBytes(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
+	ie := NewIfdEnumerateEmpty(ifdMapping, tagIndex, byteOrder)
 
-	bp, err := newByteParser(ifdBlock, byteOrder, 0)
+	bp, err := newByteParser(nil, ifdBlock, byteOrder, 0)
 	if err != nil {
 		if err == ErrOffsetInvalid {
 			return 0, nil, err
@@ -1433,9 +1452,9 @@ func ParseOneTag(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, ii *exif
 		}
 	}()
 
-	ie := NewIfdEnumerateBytes(ifdMapping, tagIndex, make([]byte, 0), byteOrder)
+	ie := NewIfdEnumerateEmpty(ifdMapping, tagIndex, byteOrder)
 
-	bp, err := newByteParser(tagBlock, byteOrder, 0)
+	bp, err := newByteParser(nil, tagBlock, byteOrder, 0)
 	if err != nil {
 		if err == ErrOffsetInvalid {
 			return nil, err
