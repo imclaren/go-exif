@@ -3,6 +3,8 @@ package exif
 import (
 	"io"
 	"io/ioutil"
+
+	log "github.com/dsoprea/go-logging"
 )
 
 type ExifScanner struct {
@@ -13,14 +15,70 @@ type ExifScanner struct {
 }
 
 func NewExifScanner(r io.ReadSeeker, size int64) (es *ExifScanner, err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
+		}
+	}()
+
+	// Search for the beginning of the EXIF information. The EXIF is near the
+	// beginning of most JPEGs, so this likely doesn't have a high cost (at
+	// least, again, with JPEGs).
+
+	// Reset io.ReadSeeker
 	_, err = r.Seek(0, io.SeekStart)
 	if err != nil {
 		return nil, err
 	}
-	return &ExifScanner{
+	es = &ExifScanner{
 		r:    r,
 		Size: size,
-	}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	for {
+		window, err := es.Peek(ExifSignatureLength)
+		if err != nil {
+			if err == io.EOF {
+				return nil, ErrNoExif
+			}
+			return nil, err
+		}
+
+		_, err = ParseExifHeader(window)
+		if err != nil {
+			if log.Is(err, ErrNoExif) == true {
+				// No EXIF. Move forward by one byte.
+
+				_, err := es.Discard(1)
+				if err != nil {
+					return nil, err
+				}
+				es.Start++
+
+				continue
+			}
+
+			// Some other error.
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		break
+	}
+
+	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", es.Start)
+
+	//rawExif, err = es.ReadAll()
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return es, nil
 }
 
 func (es *ExifScanner) Read(p []byte) (n int, err error) {

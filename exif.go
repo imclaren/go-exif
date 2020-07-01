@@ -83,42 +83,12 @@ func SearchAndExtractExifWithReadSeeker(r io.ReadSeeker, size int64) (rawExif []
 	// beginning of most JPEGs, so this likely doesn't have a high cost (at
 	// least, again, with JPEGs).
 
-	rs, err := NewExifScanner(r, size)
+	es, err := NewExifScanner(r, size)
 	log.PanicIf(err)
 
-	for {
-		window, err := rs.Peek(ExifSignatureLength)
-		if err != nil {
-			if err == io.EOF {
-				return nil, ErrNoExif
-			}
+	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", es.Start)
 
-			log.Panic(err)
-		}
-
-		_, err = ParseExifHeader(window)
-		if err != nil {
-			if log.Is(err, ErrNoExif) == true {
-				// No EXIF. Move forward by one byte.
-
-				_, err := rs.Discard(1)
-				log.PanicIf(err)
-
-				rs.Start++
-
-				continue
-			}
-
-			// Some other error.
-			log.Panic(err)
-		}
-
-		break
-	}
-
-	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", rs.Start)
-
-	rawExif, err = rs.ReadAll()
+	rawExif, err = es.ReadAll()
 	log.PanicIf(err)
 
 	return rawExif, nil
