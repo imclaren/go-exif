@@ -167,7 +167,6 @@ func (bp *byteParser) CurrentOffset() uint32 {
 // containers in the EXIF blob.
 type IfdEnumerate struct {
 	es             *ExifScanner
-	buffer         *bytes.Buffer
 	byteOrder      binary.ByteOrder
 	tagIndex       *TagIndex
 	ifdMapping     *exifcommon.IfdMapping
@@ -176,23 +175,16 @@ type IfdEnumerate struct {
 
 // NewIfdEnumerate returns a new instance of IfdEnumerate.
 func NewIfdEnumerate(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner, byteOrder binary.ByteOrder) *IfdEnumerate {
-
-	exifData, err := es.PeekAll()
-	log.PanicIf(err)
-
 	return &IfdEnumerate{
 		es:         es,
-		buffer:     bytes.NewBuffer(exifData),
 		byteOrder:  byteOrder,
 		ifdMapping: ifdMapping,
 		tagIndex:   tagIndex,
 	}
 }
 func NewIfdEnumerateEmpty(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, byteOrder binary.ByteOrder) *IfdEnumerate {
-	exifData := make([]byte, 0)
 	return &IfdEnumerate{
 		es:         nil,
-		buffer:     bytes.NewBuffer(exifData),
 		byteOrder:  byteOrder,
 		ifdMapping: ifdMapping,
 		tagIndex:   tagIndex,
