@@ -37,7 +37,9 @@ type ValueContext struct {
 	tagId   uint16
 }
 
-// ValueContextBytes returns the addressableData or the size of the byte slice that is required for the ValueContext.
+// ValueContextBytes returns the addressableData and the size of the byte 
+// slice that is required for the ValueContext. The returned addressableData
+// will be nil if we need to read from the ExifScanner
 func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int) 
 	defer func() {
 		if state := recover(); state != nil {
