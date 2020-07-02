@@ -291,6 +291,7 @@ func (ite *IfdTagEntry) getValueContext() *exifcommon.ValueContext {
 		}
 	}()
 	
+	/*
 	addressableData, size := exifcommon.ValueContextBytes(
 		unitCount, 
 		valueOffset, 
@@ -303,6 +304,7 @@ func (ite *IfdTagEntry) getValueContext() *exifcommon.ValueContext {
 		_, err := es.Read(b)
 		log.PanicIf(err)
 	}
+	*/
 	return exifcommon.NewValueContext(
 		ite.ifdIdentity.String(),
 		ite.tagId,
