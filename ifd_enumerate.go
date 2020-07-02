@@ -74,6 +74,7 @@ var (
 // statically-sized records. So, the tags (though notnecessarily their values)
 // are fairly simple to enumerate.
 type byteParser struct {
+	es            *ExifScanner
 	byteOrder     binary.ByteOrder
 	ifdOffset     uint32
 	buffer        *bytes.Buffer
@@ -103,6 +104,7 @@ func newByteParser(es *ExifScanner, addressableData []byte, byteOrder binary.Byt
 	// TODO(dustin): Add test
 
 	bp = &byteParser{
+		es:            es,
 		byteOrder:     byteOrder,
 		buffer:        bytes.NewBuffer(addressableData[ifdOffset:]),
 		currentOffset: ifdOffset,
@@ -141,13 +143,14 @@ func (bp *byteParser) getRawUint(needBytes int) (raw []byte, err error) {
 	}()
 
 	// TODO(dustin): Add test
-	
+
 	offset := 0
 	raw = make([]byte, needBytes)
 
 	for offset < needBytes {
-		//n, err := bp.buffer.Read(raw[offset:])
-		n, err := bp.er.Read(raw[offset:])
+
+		n, err := bp.buffer.Read(raw[offset:])
+		//n, err := bp.es.Read(raw[offset:])
 		log.PanicIf(err)
 
 		offset += n

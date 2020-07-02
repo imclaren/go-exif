@@ -5,10 +5,10 @@ import (
 
 	"encoding/binary"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 
-	"github.com/imclaren/go-exif/common"
-	"github.com/imclaren/go-exif/undefined"
+	exifcommon "github.com/imclaren/go-exif/common"
+	exifundefined "github.com/imclaren/go-exif/undefined"
 )
 
 var (
@@ -285,26 +285,22 @@ func (ite *IfdTagEntry) IfdIdentity() *exifcommon.IfdIdentity {
 }
 
 func (ite *IfdTagEntry) getValueContext() *exifcommon.ValueContext {
-	defer func() {
-		if state := recover(); state != nil {
-			err = log.Wrap(state.(error))
-		}
-	}()
-	
+
 	/*
-	addressableData, size := exifcommon.ValueContextBytes(
-		unitCount, 
-		valueOffset, 
-		rawValueOffset, 
-		tagType, 
-		byteOrder,
-	)
-	if addressableData == nil {
-		addressableData = make([]byte, size)
-		_, err := es.Read(b)
-		log.PanicIf(err)
-	}
+		addressableData, size := exifcommon.ValueContextBytes(
+			ite.unitCount,
+			ite.valueOffset,
+			ite.rawValueOffset,
+			ite.tagType,
+			ite.byteOrder,
+		)
+		if addressableData == nil {
+			addressableData = make([]byte, size)
+			_, err := ite.es.Read(addressableData)
+			log.PanicIf(err)
+		}
 	*/
+
 	return exifcommon.NewValueContext(
 		ite.ifdIdentity.String(),
 		ite.tagId,

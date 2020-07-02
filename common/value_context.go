@@ -5,7 +5,7 @@ import (
 
 	"encoding/binary"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 )
 
 var (
@@ -37,16 +37,10 @@ type ValueContext struct {
 	tagId   uint16
 }
 
-// ValueContextBytes returns the addressableData and the size of the byte 
+// ValueContextBytes returns the addressableData and the size of the byte
 // slice that is required for the ValueContext. The returned addressableData
 // will be nil if we need to read from the ExifScanner
-func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int) 
-	defer func() {
-		if state := recover(); state != nil {
-			err = log.Wrap(state.(error))
-		}
-	}()
-
+func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset []byte, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int) {
 	vc := ValueContext{
 		unitCount:       unitCount,
 		valueOffset:     valueOffset,
@@ -58,9 +52,9 @@ func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType Ta
 
 		ifdPath: "",
 		tagId:   0,
-	} 
+	}
 
-	tagType := vc.effectiveValueType()
+	tagType = vc.effectiveValueType()
 
 	unitSizeRaw := uint32(tagType.Size())
 
@@ -70,7 +64,7 @@ func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset, tagType Ta
 		return addressableData, len(addressableData)
 	}
 
-	return nil, vc.unitCount*unitSizeRaw
+	return nil, int(vc.unitCount * unitSizeRaw)
 }
 
 // TODO(dustin): We can update newValueContext() to derive `valueOffset` itself (from `rawValueOffset`).
