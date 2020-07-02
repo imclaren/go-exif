@@ -250,13 +250,16 @@ func (ie *IfdEnumerate) parseTag(ii *exifcommon.IfdIdentity, tagPosition int, bp
 		log.Panic(ErrTagTypeNotValid)
 	}
 
-	exifData := make([]byte, 0)
-	if ie.es != nil {
-		exifData, err = ie.es.PeekAll()
-		log.PanicIf(err)
-	}
+	/*
+		exifData := make([]byte, 0)
+		if ie.es != nil {
+			exifData, err = ie.es.PeekAll()
+			log.PanicIf(err)
+		}
+	*/
 
 	ite = newIfdTagEntry(
+		ie.es,
 		ii,
 		tagId,
 		tagPosition,
@@ -264,7 +267,7 @@ func (ie *IfdEnumerate) parseTag(ii *exifcommon.IfdIdentity, tagPosition int, bp
 		unitCount,
 		valueOffset,
 		rawValueOffset,
-		exifData[ExifAddressableAreaStart:],
+		make([]byte, 0),
 		ie.byteOrder)
 
 	ifdPath := ii.UnindexedString()

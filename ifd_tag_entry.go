@@ -17,6 +17,7 @@ var (
 
 // IfdTagEntry refers to a tag in the loaded EXIF block.
 type IfdTagEntry struct {
+	es             *ExifScanner
 	tagId          uint16
 	tagIndex       int
 	tagType        exifcommon.TagTypePrimitive
@@ -48,8 +49,9 @@ type IfdTagEntry struct {
 	tagName string
 }
 
-func newIfdTagEntry(ii *exifcommon.IfdIdentity, tagId uint16, tagIndex int, tagType exifcommon.TagTypePrimitive, unitCount uint32, valueOffset uint32, rawValueOffset []byte, addressableData []byte, byteOrder binary.ByteOrder) *IfdTagEntry {
+func newIfdTagEntry(es *ExifScanner, ii *exifcommon.IfdIdentity, tagId uint16, tagIndex int, tagType exifcommon.TagTypePrimitive, unitCount uint32, valueOffset uint32, rawValueOffset []byte, addressableData []byte, byteOrder binary.ByteOrder) *IfdTagEntry {
 	return &IfdTagEntry{
+		es:              es,
 		ifdIdentity:     ii,
 		tagId:           tagId,
 		tagIndex:        tagIndex,
@@ -286,20 +288,27 @@ func (ite *IfdTagEntry) IfdIdentity() *exifcommon.IfdIdentity {
 
 func (ite *IfdTagEntry) getValueContext() *exifcommon.ValueContext {
 
-	/*
-		addressableData, size := exifcommon.ValueContextBytes(
-			ite.unitCount,
-			ite.valueOffset,
-			ite.rawValueOffset,
-			ite.tagType,
-			ite.byteOrder,
-		)
-		if addressableData == nil {
-			addressableData = make([]byte, size)
-			_, err := ite.es.Read(addressableData)
-			log.PanicIf(err)
-		}
-	*/
+	if ite.es != nil {
+
+		/*
+			testVC := exifcommon.NewValueContext(
+				ite.ifdIdentity.String(),
+				ite.tagId,
+				ite.unitCount,
+				ite.valueOffset,
+				ite.rawValueOffset,
+				ite.addressableData,
+				ite.tagType,
+				ite.byteOrder)
+
+			size := testVC.SizeInBytesNoErr()
+		*/
+
+		exifData, err := ite.es.PeekAll()
+		//exifData, err := ite.es.Peek(int64(ExifAddressableAreaStart + uint32(size)))
+		log.PanicIf(err)
+		ite.addressableData = exifData[ExifAddressableAreaStart:]
+	}
 
 	return exifcommon.NewValueContext(
 		ite.ifdIdentity.String(),

@@ -149,6 +149,21 @@ func (vc *ValueContext) SizeInBytes() int {
 	return tagType.Size() * int(vc.unitCount)
 }
 
+func (vc *ValueContext) SizeInBytesNoErr() int {
+	size := 0
+	if vc.tagType == TypeUndefined {
+		tagType := vc.undefinedValueTagType
+		if tagType == 0 {
+			size = 8 // Assume TypeSignedRational (largest number of bytes)
+		} else {
+			size = tagType.Size()
+		}
+	} else {
+		size = vc.tagType.Size()
+	}
+	return size * int(vc.unitCount)
+}
+
 // effectiveValueType returns the effective type of the unknown-type tag or, if
 // not unknown, the actual type.
 func (vc *ValueContext) effectiveValueType() (tagType TagTypePrimitive) {
