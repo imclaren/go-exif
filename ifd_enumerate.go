@@ -141,12 +141,13 @@ func (bp *byteParser) getRawUint(needBytes int) (raw []byte, err error) {
 	}()
 
 	// TODO(dustin): Add test
-
+	
 	offset := 0
 	raw = make([]byte, needBytes)
 
 	for offset < needBytes {
-		n, err := bp.buffer.Read(raw[offset:])
+		//n, err := bp.buffer.Read(raw[offset:])
+		n, err := bp.er.Read(raw[offset:])
 		log.PanicIf(err)
 
 		offset += n
