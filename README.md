@@ -23,13 +23,13 @@ $ go get -t github.com/imclaren/go-exif
 func getExifTags(filePath string) (OK bool, exifTags []ExifTag, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-        return false, nil, err
-    }
+		return false, nil, err
+	}
 	defer f.Close()
 	fi, err := f.Stat()
 	if err != nil {
-        return false, nil, err
-    }
+		return false, nil, err
+ 	}
 	s, err := exif.NewScanner(f, fi.Size())
 	if err != nil {
 		if err == exif.ErrNoExif {
@@ -38,9 +38,9 @@ func getExifTags(filePath string) (OK bool, exifTags []ExifTag, err error) {
 		return false, nil, err
 	}
 	exifTags, err = s.GetFlatExifData()
-    if err != nil {
-        return false, nil, err
-    }
+	if err != nil {
+		return false, nil, err
+	}
 	return true, exifTags, nil
 }
 ```
