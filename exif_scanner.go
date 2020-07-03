@@ -11,12 +11,14 @@ import (
 )
 
 const (
-	// DefaultScanLimit is the default scan limit of 1MB. Note that Exif metadata
+	// DefaultStartLimit is the default search limit.  By default go-exif scanner searches up to 5MB into the file for the EXIF header
+	DefaultStartLimit = 5 * (1 << 10) << 10 // 5 MB
+
+	// DefaultScanLimit is the default scan limit. Note that Exif metadata
 	// is restricted in size to 64 kB in JPEG images because according to the JPEG
 	// specification this information must be contained within a single JPEG APP1
 	// segment.
-	DefaultStartLimit = 1 * (1 << 10) << 10 // 1 MB
-	DefaultScanLimit  = 1 * (1 << 10) << 10 // 1 MB
+	DefaultScanLimit = 1 * (1 << 10) << 10 // 1 MB
 )
 
 // Scanner is the Scanner struct
@@ -32,7 +34,7 @@ type Scanner struct {
 // The variables are an io.ReadSeeker and the size of the bytes in the io.ReadSeeker.
 // NewScanner uses the default start anf scan limits for searching for the EXIF header
 // and reading the header.
-// The default start and scan limits are 1MB.
+// The default start limit is 5MB, and default scan limit is 1MB.
 // Note that Exif metadata is restricted in size to 64 kB in JPEG images because according
 // to the JPEG specification this information must be contained within a single JPEG APP1 segment.
 func NewScanner(r io.ReadSeeker, size int64) (s *Scanner, err error) {
