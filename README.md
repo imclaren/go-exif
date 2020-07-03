@@ -3,7 +3,11 @@
 
 # Origin
 
-This project is a fork of github.com/dsoprea/go-exif/v2.  The fork extracts EXIF tags from files without needing to store all of the bytes from the start of the EXIF block in memory.
+This project is a fork of github.com/dsoprea/go-exif/v2.  This fork extracts EXIF tags from files without needing to store all of the bytes (starting from the start of the EXIF block) in memory.
+
+By default the go-exif scanner searches up to 5MB into the file for the EXIF header, and then scans up to 1MB of EXIF data.  These defaults can be changed when creating a new scanner.  
+
+The initial search does not increase memory usage, it just takes a long time to search entire large files for exif headers.  Most EXIF headers seem to be near the start of files.
 
 # Overview
 
