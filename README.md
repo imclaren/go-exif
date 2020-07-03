@@ -5,6 +5,8 @@
 
 This project is a fork of github.com/dsoprea/go-exif/v2.  The fork extracts EXIF tags from files without needing to store all of the bytes from the start of the EXIF block in memory.
 
+By default the go-exif scanner scans 1MB into the file and then scans for 1MB of EXIF data.  These defaults can be changed when creating a new scanner.
+
 # Overview
 
 This package provides native Go functionality to parse an existing EXIF block, update an existing EXIF block, or add a new EXIF block.
