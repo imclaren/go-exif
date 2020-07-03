@@ -20,7 +20,7 @@ $ go get -t github.com/imclaren/go-exif
 # Example
 
 ```
-func getExifTags(filePath string) (OK bool, exifTags []ExifTag, err error) {
+func getExifTags(filePath string) (OK bool, exifTags []exif.ExifTag, err error) {
 	f, err := os.Open(filePath)
 	if err != nil {
 		return false, nil, err
