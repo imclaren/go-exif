@@ -96,6 +96,7 @@ func main() {
 
 	f, err := os.Open(arguments.Filepath)
 	log.PanicIf(err)
+	defer f.Close()
 
 	fi, err := f.Stat()
 	log.PanicIf(err)
