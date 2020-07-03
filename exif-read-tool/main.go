@@ -14,17 +14,18 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/dsoprea/go-logging"
+	log "github.com/dsoprea/go-logging"
 	"github.com/jessevdk/go-flags"
 
 	"github.com/imclaren/go-exif"
-	"github.com/imclaren/go-exif/common"
+	exifcommon "github.com/imclaren/go-exif/common"
 )
 
 const (
@@ -55,6 +56,7 @@ type parameters struct {
 	IsVerbose               bool   `short:"v" long:"verbose" description:"Print logging"`
 	ThumbnailOutputFilepath string `short:"t" long:"thumbnail-output-filepath" description:"File-path to write thumbnail to (if present)"`
 	DoNotPrintTags          bool   `short:"n" long:"no-tags" description:"Do not actually print tags. Good for auditing the logs or merely checking the EXIF structure for errors"`
+	ScanLimit               int64  `short:"s" long:"scan-limit" description:"Limit size of EXIF data search.  Set as 0 for no limit.  The default is 1MB"`
 }
 
 var (
@@ -86,13 +88,19 @@ func main() {
 		log.LoadConfiguration(scp)
 	}
 
+	scanLimit := int64(exif.DefaultScanLimit)
+	if isFlagPassed("s") {
+		scanLimit = arguments.ScanLimit
+
+	}
+
 	f, err := os.Open(arguments.Filepath)
 	log.PanicIf(err)
 
-	data, err := ioutil.ReadAll(f)
+	fi, err := f.Stat()
 	log.PanicIf(err)
 
-	rawExif, err := exif.SearchAndExtractExif(data)
+	s, err := exif.NewScannerLimit(f, fi.Size(), scanLimit)
 	if err != nil {
 		if err == exif.ErrNoExif {
 			fmt.Printf("No EXIF data.\n")
@@ -102,11 +110,11 @@ func main() {
 		log.Panic(err)
 	}
 
-	mainLogger.Debugf(nil, "EXIF blob is (%d) bytes.", len(rawExif))
+	mainLogger.Debugf(nil, "EXIF blob starts at (%d).", s.Current)
 
 	// Run the parse.
 
-	entries, err := exif.GetFlatExifData(rawExif)
+	entries, err := s.GetFlatExifData()
 	log.PanicIf(err)
 
 	// Write the thumbnail is requested and present.
@@ -116,7 +124,7 @@ func main() {
 		im := exif.NewIfdMappingWithStandard()
 		ti := exif.NewTagIndex()
 
-		_, index, err := exif.Collect(im, ti, rawExif)
+		_, index, err := exif.Collect(s, im, ti)
 		log.PanicIf(err)
 
 		var thumbnail []byte
@@ -160,4 +168,14 @@ func main() {
 			}
 		}
 	}
+}
+
+func isFlagPassed(name string) bool {
+	found := false
+	flag.Visit(func(f *flag.Flag) {
+		if f.Name == name {
+			found = true
+		}
+	})
+	return found
 }

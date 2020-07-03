@@ -1,7 +1,6 @@
 package exif
 
 import (
-	"bytes"
 	"path"
 	"reflect"
 	"testing"
@@ -99,12 +98,10 @@ func validateExifSimpleTestIb(exifData []byte, t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//eh, index, err := Collect(im, ti, exifData)
-	eh, index, err := Collect(im, ti, es)
+	eh, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	if eh.ByteOrder != exifcommon.TestDefaultByteOrder {

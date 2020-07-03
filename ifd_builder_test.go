@@ -194,12 +194,10 @@ func TestIfdBuilder_AddTagsFromExisting(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, exifData)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	ib := NewIfdBuilder(im, ti, exifcommon.IfdStandardIfdIdentity, exifcommon.TestDefaultByteOrder)
@@ -235,12 +233,10 @@ func TestIfdBuilder_AddTagsFromExisting__Includes(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, exifData)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	ib := NewIfdBuilder(im, ti, exifcommon.IfdStandardIfdIdentity, exifcommon.TestDefaultByteOrder)
@@ -273,12 +269,10 @@ func TestIfdBuilder_AddTagsFromExisting__Excludes(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, exifData)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	ib := NewIfdBuilder(im, ti, exifcommon.IfdStandardIfdIdentity, exifcommon.TestDefaultByteOrder)
@@ -1322,12 +1316,10 @@ func TestIfdBuilder_NewIfdBuilderFromExistingChain(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	ib := NewIfdBuilderFromExistingChain(index.RootIfd)
@@ -1429,12 +1421,10 @@ func TestIfdBuilder_SetStandardWithName_UpdateGps(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	rootIfd := index.RootIfd
@@ -1478,12 +1468,10 @@ func TestIfdBuilder_SetStandardWithName_UpdateGps(t *testing.T) {
 
 	// Decode from bytes.
 
-	r = bytes.NewReader(updatedRawExif)
-	es, err = NewExifScanner(r, int64(len(updatedRawExif)))
+	s, err = NewScannerLimitFromBytes(updatedRawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, updatedIndex, err := Collect(im, ti, updatedRawExif)
-	_, updatedIndex, err := Collect(im, ti, es)
+	_, updatedIndex, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	updatedRootIfd := updatedIndex.RootIfd
@@ -1518,12 +1506,10 @@ func ExampleIfdBuilder_SetStandardWithName_updateGps() {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	rootIfd := index.RootIfd
@@ -1563,12 +1549,10 @@ func ExampleIfdBuilder_SetStandardWithName_updateGps() {
 
 	// Decode from bytes.
 
-	r = bytes.NewReader(updatedRawExif)
-	es, err = NewExifScanner(r, int64(len(updatedRawExif)))
+	s, err = NewScannerLimitFromBytes(updatedRawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, updatedIndex, err := Collect(im, ti, updatedRawExif)
-	_, updatedIndex, err := Collect(im, ti, es)
+	_, updatedIndex, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	updatedRootIfd := updatedIndex.RootIfd
@@ -1606,12 +1590,10 @@ func ExampleIfdBuilder_SetStandardWithName_timestamp() {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	rootIfd := index.RootIfd
@@ -1637,12 +1619,10 @@ func ExampleIfdBuilder_SetStandardWithName_timestamp() {
 
 	// Decode from bytes.
 
-	r = bytes.NewReader(updatedRawExif)
-	es, err = NewExifScanner(r, int64(len(updatedRawExif)))
+	s, err = NewScannerLimitFromBytes(updatedRawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, updatedIndex, err := Collect(im, ti, updatedRawExif)
-	_, updatedIndex, err := Collect(im, ti, es)
+	_, updatedIndex, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	updatedRootIfd := updatedIndex.RootIfd
@@ -1681,12 +1661,10 @@ func TestIfdBuilder_NewIfdBuilderFromExistingChain_RealData(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, originalIndex, err := Collect(im, ti, rawExif)
-	_, originalIndex, err := Collect(im, ti, es)
+	_, originalIndex, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	originalThumbnailData, err := originalIndex.RootIfd.NextIfd.Thumbnail()
@@ -1705,12 +1683,10 @@ func TestIfdBuilder_NewIfdBuilderFromExistingChain_RealData(t *testing.T) {
 
 	// Parse again.
 
-	r = bytes.NewReader(updatedExif)
-	es, err = NewExifScanner(r, int64(len(updatedExif)))
+	s, err = NewScannerLimitFromBytes(updatedExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, recoveredIndex, err := Collect(im, ti, updatedExif)
-	_, recoveredIndex, err := Collect(im, ti, es)
+	_, recoveredIndex, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	recoveredTags := recoveredIndex.RootIfd.DumpTags()
@@ -1989,12 +1965,10 @@ func ExampleIfd_Thumbnail() {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	// This returns the raw bytes that you will be looking for, but there's no
@@ -2018,12 +1992,10 @@ func ExampleBuilderTag_SetValue() {
 
 	ti := NewTagIndex()
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	// Create builder.
@@ -2084,12 +2056,10 @@ func ExampleIfdBuilder_SetStandardWithName() {
 
 	// Load current IFDs.
 
-	r := bytes.NewReader(rawExif)
-	es, err := NewExifScanner(r, int64(len(rawExif)))
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	ib := NewIfdBuilderFromExistingChain(index.RootIfd)
@@ -2126,12 +2096,10 @@ func ExampleIfdBuilder_SetStandardWithName() {
 
 	// Reparse the EXIF to confirm that our value is there.
 
-	r = bytes.NewReader(updatedRawExif)
-	es, err = NewExifScanner(r, int64(len(updatedRawExif)))
+	s, err = NewScannerLimitFromBytes(updatedRawExif, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err = Collect(im, ti, updatedRawExif)
-	_, index, err = Collect(im, ti, es)
+	_, index, err = Collect(s, im, ti)
 	log.PanicIf(err)
 
 	// This isn't strictly necessary for the same reason as above, but it's here

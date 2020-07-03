@@ -40,7 +40,7 @@ func TestVisit(t *testing.T) {
 	fi, err := f.Stat()
 	log.PanicIf(err)
 
-	es, err := NewExifScanner(f, fi.Size())
+	s, err := NewScanner(f, fi.Size())
 	log.PanicIf(err)
 
 	// Run the parse.
@@ -81,7 +81,7 @@ func TestVisit(t *testing.T) {
 		return nil
 	}
 
-	_, furthestOffset, err := Visit(exifcommon.IfdStandardIfdIdentity, im, ti, es, visitor)
+	_, furthestOffset, err := Visit(s, exifcommon.IfdStandardIfdIdentity, im, ti, visitor)
 	log.PanicIf(err)
 
 	if furthestOffset != 32935 {
@@ -242,13 +242,8 @@ func TestCollect(t *testing.T) {
 	defer f.Close()
 	fi, err := f.Stat()
 	log.PanicIf(err)
-	es, err := NewExifScanner(f, fi.Size())
+	s, err := NewScanner(f, fi.Size())
 	log.PanicIf(err)
-
-	/*
-		rawExif, err := SearchFileAndExtractExif(testImageFilepath)
-		log.PanicIf(err)
-	*/
 
 	im := NewIfdMapping()
 
@@ -257,8 +252,7 @@ func TestCollect(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	//_, index, err := Collect(im, ti, rawExif)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	rootIfd := index.RootIfd

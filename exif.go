@@ -55,7 +55,6 @@ func SearchAndExtractExif(data []byte) (rawExif []byte, err error) {
 	}()
 
 	r := bytes.NewReader(data)
-
 	rawExif, err = SearchAndExtractExifWithReadSeeker(r, int64(len(data)))
 	if err != nil {
 		if err == ErrNoExif {
@@ -81,12 +80,12 @@ func SearchAndExtractExifWithReadSeeker(r io.ReadSeeker, size int64) (rawExif []
 	// beginning of most JPEGs, so this likely doesn't have a high cost (at
 	// least, again, with JPEGs).
 
-	es, err := NewExifScanner(r, size)
+	s, err := NewScanner(r, size)
 	log.PanicIf(err)
 
-	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", es.Start)
+	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", s.Start)
 
-	rawExif, err = es.ReadAll()
+	rawExif, err = s.ReadAll()
 	log.PanicIf(err)
 
 	return rawExif, nil
@@ -162,20 +161,20 @@ func ParseExifHeader(data []byte) (eh ExifHeader, err error) {
 }
 
 // Visit recursively invokes a callback for every tag.
-func Visit(rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner, visitor TagVisitorFn) (eh ExifHeader, furthestOffset uint32, err error) {
+func Visit(s *Scanner, rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, visitor TagVisitorFn) (eh ExifHeader, furthestOffset uint32, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
 		}
 	}()
 
-	window, err := es.Peek(ExifSignatureLength)
+	window, err := s.Peek(ExifSignatureLength)
 	log.PanicIf(err)
 
 	eh, err = ParseExifHeader(window)
 	log.PanicIf(err)
 
-	ie := NewIfdEnumerate(ifdMapping, tagIndex, es, eh.ByteOrder)
+	ie := NewIfdEnumerate(s, ifdMapping, tagIndex, eh.ByteOrder)
 
 	_, err = ie.Scan(rootIfdIdentity, eh.FirstIfdOffset, visitor)
 	log.PanicIf(err)
@@ -186,20 +185,20 @@ func Visit(rootIfdIdentity *exifcommon.IfdIdentity, ifdMapping *exifcommon.IfdMa
 }
 
 // Collect recursively builds a static structure of all IFDs and tags.
-func Collect(ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex, es *ExifScanner) (eh ExifHeader, index IfdIndex, err error) {
+func Collect(s *Scanner, ifdMapping *exifcommon.IfdMapping, tagIndex *TagIndex) (eh ExifHeader, index IfdIndex, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
 		}
 	}()
 
-	window, err := es.Peek(ExifSignatureLength)
+	window, err := s.Peek(ExifSignatureLength)
 	log.PanicIf(err)
 
 	eh, err = ParseExifHeader(window)
 	log.PanicIf(err)
 
-	ie := NewIfdEnumerate(ifdMapping, tagIndex, es, eh.ByteOrder)
+	ie := NewIfdEnumerate(s, ifdMapping, tagIndex, eh.ByteOrder)
 
 	index, err = ie.Collect(eh.FirstIfdOffset)
 	log.PanicIf(err)

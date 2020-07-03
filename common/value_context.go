@@ -37,36 +37,6 @@ type ValueContext struct {
 	tagId   uint16
 }
 
-// ValueContextBytes returns the addressableData and the size of the byte
-// slice that is required for the ValueContext. The returned addressableData
-// will be nil if we need to read from the ExifScanner
-func ValueContextBytes(unitCount, valueOffset uint32, rawValueOffset []byte, tagType TagTypePrimitive, byteOrder binary.ByteOrder) (addressableData []byte, size int) {
-	vc := ValueContext{
-		unitCount:       unitCount,
-		valueOffset:     valueOffset,
-		rawValueOffset:  rawValueOffset,
-		addressableData: nil,
-
-		tagType:   tagType,
-		byteOrder: byteOrder,
-
-		ifdPath: "",
-		tagId:   0,
-	}
-
-	tagType = vc.effectiveValueType()
-
-	unitSizeRaw := uint32(tagType.Size())
-
-	if vc.isEmbedded() == true {
-		byteLength := unitSizeRaw * vc.unitCount
-		addressableData = vc.rawValueOffset[:byteLength]
-		return addressableData, len(addressableData)
-	}
-
-	return nil, int(vc.unitCount * unitSizeRaw)
-}
-
 // TODO(dustin): We can update newValueContext() to derive `valueOffset` itself (from `rawValueOffset`).
 
 // NewValueContext returns a new ValueContext struct.
@@ -147,21 +117,6 @@ func (vc *ValueContext) SizeInBytes() int {
 	tagType := vc.effectiveValueType()
 
 	return tagType.Size() * int(vc.unitCount)
-}
-
-func (vc *ValueContext) SizeInBytesNoErr() int {
-	size := 0
-	if vc.tagType == TypeUndefined {
-		tagType := vc.undefinedValueTagType
-		if tagType == 0 {
-			size = 8 // Assume TypeSignedRational (largest number of bytes)
-		} else {
-			size = tagType.Size()
-		}
-	} else {
-		size = vc.tagType.Size()
-	}
-	return size * int(vc.unitCount)
 }
 
 // effectiveValueType returns the effective type of the unknown-type tag or, if

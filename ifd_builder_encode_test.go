@@ -789,12 +789,10 @@ func Test_IfdByteEncoder_EncodeToExif_WithChildAndSibling(t *testing.T) {
 
 	// Parse.
 
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, exifData)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	tagsDump := index.RootIfd.DumpTree()
@@ -877,13 +875,10 @@ func ExampleIfdByteEncoder_EncodeToExif() {
 	log.PanicIf(err)
 
 	// Parse it so we can see it.
-
-	r := bytes.NewReader(exifData)
-	es, err := NewExifScanner(r, int64(len(exifData)))
+	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
 	log.PanicIf(err)
 
-	//_, index, err := Collect(im, ti, exifData)
-	_, index, err := Collect(im, ti, es)
+	_, index, err := Collect(s, im, ti)
 	log.PanicIf(err)
 
 	for i, ite := range index.RootIfd.Entries {

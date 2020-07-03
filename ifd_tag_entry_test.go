@@ -14,7 +14,6 @@ func TestIfdTagEntry_RawBytes_Allocated(t *testing.T) {
 	addressableBytes := data
 
 	ite := newIfdTagEntry(
-		nil,
 		exifcommon.IfdStandardIfdIdentity,
 		0x1,
 		0,
@@ -46,7 +45,6 @@ func TestIfdTagEntry_RawBytes_Embedded(t *testing.T) {
 	data := []byte{0x11, 0x22, 0x33, 0x44}
 
 	ite := newIfdTagEntry(
-		nil,
 		exifcommon.IfdStandardIfdIdentity,
 		0x1,
 		0,
@@ -67,7 +65,6 @@ func TestIfdTagEntry_RawBytes_Embedded(t *testing.T) {
 
 func TestIfdTagEntry_String(t *testing.T) {
 	ite := newIfdTagEntry(
-		nil,
 		exifcommon.IfdStandardIfdIdentity,
 		0x1,
 		0,

@@ -12,7 +12,6 @@ import (
 	log "github.com/dsoprea/go-logging"
 
 	exifcommon "github.com/imclaren/go-exif/common"
-	exifundefined "github.com/imclaren/go-exif/undefined"
 )
 
 var (
@@ -147,72 +146,30 @@ func GetFlatExifData(exifDataIn []byte) (exifTags []ExifTag, err error) {
 	}()
 
 	r := bytes.NewReader(exifDataIn)
-	es, err := NewExifScanner(r, int64(len(exifDataIn)))
+
+	s, err := NewScanner(r, int64(len(exifDataIn)))
 	log.PanicIf(err)
 
-	window, err := es.Peek(ExifSignatureLength)
-	log.PanicIf(err)
+	return s.GetFlatExifData()
+}
 
-	eh, err := ParseExifHeader(window)
-	log.PanicIf(err)
-
-	im := NewIfdMappingWithStandard()
-	ti := NewTagIndex()
-
-	ie := NewIfdEnumerate(im, ti, es, eh.ByteOrder)
-
-	exifTags = make([]ExifTag, 0)
-
-	visitor := func(fqIfdPath string, ifdIndex int, ite *IfdTagEntry) (err error) {
-		// This encodes down to base64. Since this an example tool and we do not
-		// expect to ever decode the output, we are not worried about
-		// specifically base64-encoding it in order to have a measure of
-		// control.
-		valueBytes, err := ite.GetRawBytes()
-		if err != nil {
-			if err == exifundefined.ErrUnparseableValue {
-				return nil
-			}
-
-			log.Panic(err)
+// GetFlatExifDataNoLimit returns a simple, flat representation of all tags.
+// The scan will have with no size limit.
+// All the contents of exifDataIn from the start of the exif block (if any)
+// will be held in memory.
+func GetFlatExifDataNoLimit(exifDataIn []byte) (exifTags []ExifTag, err error) {
+	defer func() {
+		if state := recover(); state != nil {
+			err = log.Wrap(state.(error))
 		}
+	}()
 
-		value, err := ite.Value()
-		if err != nil {
-			if err == exifcommon.ErrUnhandledUndefinedTypedTag {
-				value = exifundefined.UnparseableUnknownTagValuePlaceholder
-			} else {
-				log.Panic(err)
-			}
-		}
+	r := bytes.NewReader(exifDataIn)
 
-		et := ExifTag{
-			IfdPath:      fqIfdPath,
-			TagId:        ite.TagId(),
-			TagName:      ite.TagName(),
-			UnitCount:    ite.UnitCount(),
-			TagTypeId:    ite.TagType(),
-			TagTypeName:  ite.TagType().String(),
-			Value:        value,
-			ValueBytes:   valueBytes,
-			ChildIfdPath: ite.ChildIfdPath(),
-		}
-
-		et.Formatted, err = ite.Format()
-		log.PanicIf(err)
-
-		et.FormattedFirst, err = ite.FormatFirst()
-		log.PanicIf(err)
-
-		exifTags = append(exifTags, et)
-
-		return nil
-	}
-
-	_, err = ie.Scan(exifcommon.IfdStandardIfdIdentity, eh.FirstIfdOffset, visitor)
+	s, err := NewScannerNoLimit(r, int64(len(exifDataIn)))
 	log.PanicIf(err)
 
-	return exifTags, nil
+	return s.GetFlatExifData()
 }
 
 // GpsDegreesEquals returns true if the two `GpsDegrees` are identical.
