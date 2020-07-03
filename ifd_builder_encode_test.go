@@ -789,7 +789,7 @@ func Test_IfdByteEncoder_EncodeToExif_WithChildAndSibling(t *testing.T) {
 
 	// Parse.
 
-	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(exifData, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -875,7 +875,7 @@ func ExampleIfdByteEncoder_EncodeToExif() {
 	log.PanicIf(err)
 
 	// Parse it so we can see it.
-	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(exifData, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)

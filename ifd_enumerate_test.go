@@ -33,7 +33,7 @@ func TestIfdTagEntry_RawBytes_RealData(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -76,7 +76,7 @@ func TestIfd_FindTagWithId_Hit(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -106,7 +106,7 @@ func TestIfd_FindTagWithId_Miss(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -135,7 +135,7 @@ func TestIfd_FindTagWithName_Hit(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -166,7 +166,7 @@ func TestIfd_FindTagWithName_Miss(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -195,7 +195,7 @@ func TestIfd_FindTagWithName_NonStandard(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -224,7 +224,7 @@ func TestIfd_Thumbnail(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -271,7 +271,7 @@ func TestIfd_GpsInfo(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -317,7 +317,7 @@ func TestIfd_GpsInfo__2_0_0_0(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -367,7 +367,7 @@ func TestIfd_EnumerateTagsRecursively(t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -528,7 +528,7 @@ func ExampleIfd_EnumerateTagsRecursively() {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -560,7 +560,7 @@ func ExampleIfd_GpsInfo() {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)
@@ -591,7 +591,7 @@ func ExampleIfd_FindTagWithName() {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(rawExif, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(rawExif, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	_, index, err := Collect(s, im, ti)

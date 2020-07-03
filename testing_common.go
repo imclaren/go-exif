@@ -98,7 +98,7 @@ func validateExifSimpleTestIb(exifData []byte, t *testing.T) {
 
 	ti := NewTagIndex()
 
-	s, err := NewScannerLimitFromBytes(exifData, DefaultScanLimit)
+	s, err := NewScannerLimitFromBytes(exifData, DefaultStartLimit, DefaultScanLimit)
 	log.PanicIf(err)
 
 	eh, index, err := Collect(s, im, ti)

@@ -15,7 +15,8 @@ const (
 	// is restricted in size to 64 kB in JPEG images because according to the JPEG
 	// specification this information must be contained within a single JPEG APP1
 	// segment.
-	DefaultScanLimit = (1 << 10) << 10 // 1 MB
+	DefaultStartLimit = 1 * (1 << 10) << 10 // 1 MB
+	DefaultScanLimit  = 1 * (1 << 10) << 10 // 1 MB
 )
 
 // Scanner is the Scanner struct
@@ -29,25 +30,28 @@ type Scanner struct {
 
 // NewScanner creates a new Scanner.
 // The variables are an io.ReadSeeker and the size of the bytes in the io.ReadSeeker.
-// NewScanner reads the default scan limit of 1MB into memory. Note that Exif metadata
-// is restricted in size to 64 kB in JPEG images because according to the JPEG specification
-// this information must be contained within a single JPEG APP1 segment.
+// NewScanner uses the default start anf scan limits for searching for the EXIF header
+// and reading the header.
+// The default start and scan limits are 1MB.
+// Note that Exif metadata is restricted in size to 64 kB in JPEG images because according
+// to the JPEG specification this information must be contained within a single JPEG APP1 segment.
 func NewScanner(r io.ReadSeeker, size int64) (s *Scanner, err error) {
-	return NewScannerLimit(r, size, DefaultScanLimit)
+	return NewScannerLimit(r, size, DefaultStartLimit, DefaultScanLimit)
 }
 
-// NewScannerNoLimit creates a new Scanner with no scan size limit.
+// NewScannerNoLimit creates a new Scanner with no scan size limit for searching
+// for the EXIF header and reading the header.
 // The variables are an io.ReadSeeker and the size of the bytes in the io.ReadSeeker.
 // All the contents of the io.Readseeker from the start of the exif block (if any)
 // will be held in memory.
 func NewScannerNoLimit(r io.ReadSeeker, size int64) (s *Scanner, err error) {
-	return NewScannerLimit(r, size, 0)
+	return NewScannerLimit(r, size, 0, 0)
 }
 
 // NewScannerLimit creates a new Scanner.
 // The variables are an io.ReadSeeker, the size of the bytes in the io.ReadSeeker,
-// and the scan limit.
-func NewScannerLimit(r io.ReadSeeker, size, scanLimit int64) (s *Scanner, err error) {
+// and the scan limit for searching for the EXIF header and reading the header.
+func NewScannerLimit(r io.ReadSeeker, size, startLimit, scanLimit int64) (s *Scanner, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -71,25 +75,26 @@ func NewScannerLimit(r io.ReadSeeker, size, scanLimit int64) (s *Scanner, err er
 		scanLimit: scanLimit,
 	}
 	for {
-		window, err := s.Peek(ExifSignatureLength)
+
+		// Stop if we have reached the scanLimit
+		if startLimit > 0 && s.Current > startLimit {
+			return nil, ErrNoExif
+		}
+
+		// Peek and then move forward 1 byte
+		window, err := s.PeekAndSeek(ExifSignatureLength, 1)
 		if err != nil {
 			if err == io.EOF {
 				return nil, ErrNoExif
 			}
 			return nil, err
 		}
+		s.Start++
 
 		_, err = ParseExifHeader(window)
 		if err != nil {
 			if log.Is(err, ErrNoExif) == true {
-				// No EXIF. Move forward by one byte.
-
-				_, err := s.Discard(1)
-				if err != nil {
-					return nil, err
-				}
-				s.Start++
-
+				// No EXIF
 				continue
 			}
 
@@ -102,6 +107,13 @@ func NewScannerLimit(r io.ReadSeeker, size, scanLimit int64) (s *Scanner, err er
 		break
 	}
 
+	// Move back one byte to return to the start of the EXIF header
+	_, err = s.Discard(-1)
+	if err != nil {
+		return nil, err
+	}
+	s.Start--
+
 	exifLogger.Debugf(nil, "Found EXIF blob (%d) bytes from initial position.", s.Start)
 
 	return s, nil
@@ -109,9 +121,9 @@ func NewScannerLimit(r io.ReadSeeker, size, scanLimit int64) (s *Scanner, err er
 
 // NewScannerLimitFromBytes creates a new Scanner.
 // The variables are the bytes and the scan limit.
-func NewScannerLimitFromBytes(b []byte, scanLimit int64) (s *Scanner, err error) {
+func NewScannerLimitFromBytes(b []byte, startLimit, scanLimit int64) (s *Scanner, err error) {
 	r := bytes.NewReader(b)
-	return NewScannerLimit(r, int64(len(b)), scanLimit)
+	return NewScannerLimit(r, int64(len(b)), startLimit, scanLimit)
 }
 
 // Remaining returns the number of bytes remaining in the
@@ -146,6 +158,22 @@ func (s *Scanner) Peek(n int64) (b []byte, err error) {
 		return b, err
 	}
 	s.Current, err = s.r.Seek(oldCurrent, io.SeekStart)
+	return b, err
+}
+
+// PeekAndSeek reads n bytes then seeks to the offset
+func (s *Scanner) PeekAndSeek(n, offset int64) (b []byte, err error) {
+	if n == 0 {
+		return s.peekAll()
+	}
+	oldCurrent := s.Current
+	b = make([]byte, n)
+	readN, err := s.Read(b)
+	s.Current += int64(readN)
+	if err != nil {
+		return b, err
+	}
+	s.Current, err = s.r.Seek(oldCurrent+offset, io.SeekStart)
 	return b, err
 }
 
