@@ -12,7 +12,7 @@ This project is a fork of the following code:
 
 ```
 $ go get -t github.com/dsoprea/go-exif/v2
-
+```
 
 # Getting
 
