@@ -1,13 +1,15 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/dsoprea/go-exif)](https://goreportcard.com/report/github.com/imclaren/go-exif)
 [![GoDoc](https://godoc.org/github.com/imclaren/go-exif?status.svg)](https://godoc.org/github.com/imclaren/go-exif)
 
-# Overview
-
-This package provides native Go functionality to parse an existing EXIF block, update an existing EXIF block, or add a new EXIF block.
-
 # Origin
 
 This project is a fork of github.com/dsoprea/go-exif/v2
+
+The fork extracts EXIF tags from files without storing all of the bytes from the start of the EXIF block in memory.
+
+# Overview
+
+This package provides native Go functionality to parse an existing EXIF block, update an existing EXIF block, or add a new EXIF block.
 
 # Getting
 
