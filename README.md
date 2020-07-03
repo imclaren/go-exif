@@ -8,11 +8,7 @@ This package provides native Go functionality to parse an existing EXIF block, u
 
 # Origin
 
-This project is a fork of the following code:
-
-```
-$ go get -t github.com/dsoprea/go-exif/v2
-```
+This project is a fork of github.com/dsoprea/go-exif/v2
 
 # Getting
 
