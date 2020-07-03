@@ -1,4 +1,3 @@
-[![Coverage Status](https://coveralls.io/repos/github/imclaren/go-exif/badge.svg?branch=master)](https://coveralls.io/github/imclaren/go-exif?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/dsoprea/go-exif)](https://goreportcard.com/report/github.com/imclaren/go-exif)
 [![GoDoc](https://godoc.org/github.com/imclaren/go-exif?status.svg)](https://godoc.org/github.com/imclaren/go-exif)
 
