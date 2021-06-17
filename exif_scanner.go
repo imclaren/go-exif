@@ -222,7 +222,8 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 
 		// Copy the file up to the s.scanLimit to the new file
 		_, err = s.r.Seek(0, io.SeekStart)
-		nBytes, err := io.CopyN(tempFile, s.r, s.Current+s.scanLimit)
+		//nBytes, err := io.CopyN(tempFile, s.r, s.Current+s.scanLimit)
+		_, err = io.Copy(tempFile, s.r)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -232,7 +233,7 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 
 		// Replace the reader with the temp file
 		s.r = tempFile
-		s.Size = s.Current + nBytes
+		//s.Size = s.Current + nBytes
 	}
 
 	window, err := s.Peek(ExifSignatureLength)
