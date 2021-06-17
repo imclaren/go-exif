@@ -226,6 +226,7 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 		if err != nil {
 			log.Panic(err)
 		}
+		_, err = tempFile.Seek(s.Current, io.SeekStart)
 
 		fmt.Println("new size:", s.Current+s.scanLimit)
 
