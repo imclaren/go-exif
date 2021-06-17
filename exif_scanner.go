@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"os"
 
 	log "github.com/dsoprea/go-logging"
 	exifcommon "github.com/imclaren/go-exif/common"
@@ -78,7 +79,7 @@ func NewScannerLimit(r io.ReadSeeker, size, startLimit, scanLimit int64) (s *Sca
 	}
 	for {
 
-		// Stop if we have reached the scanLimit
+		// Stop if we have reached the startLimit
 		if startLimit > 0 && s.Current > startLimit {
 			return nil, ErrNoExif
 		}
@@ -204,6 +205,28 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 			err = log.Wrap(state.(error))
 		}
 	}()
+
+	// Create a new tempFile limited to the scan limit to avoid enormous exif tags
+	if s.scanLimit > 0 {
+
+		// Create tempFile
+		tempDir := os.TempDir()
+		tempFile, err := ioutil.TempFile(tempDir, "file.json")
+		if err != nil {
+			return nil, err
+		}
+		defer os.Remove(tempFile.Name())
+
+		// Copy the file up to the s.scanLimit to the new file
+		nBytes, err := io.CopyN(tempFile, s.r, s.Current+s.scanLimit)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		// Replace the reader with the temp file
+		s.r = tempFile
+		s.Size = s.Current + nBytes
+	}
 
 	window, err := s.Peek(ExifSignatureLength)
 	log.PanicIf(err)
