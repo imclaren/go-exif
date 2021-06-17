@@ -138,7 +138,7 @@ func (et ExifTag) String() string {
 // RELEASE(dustin): In the next release, add an options struct to Scan() and GetFlatExifData(), and put the MiscellaneousExifData in the return.
 
 // GetFlatExifData returns a simple, flat representation of all tags.
-func GetFlatExifData(exifDataIn []byte) (exifTags []ExifTag, err error) {
+func GetFlatExifDataFromBytes(exifDataIn []byte) (exifTags []ExifTag, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
@@ -157,7 +157,7 @@ func GetFlatExifData(exifDataIn []byte) (exifTags []ExifTag, err error) {
 // The scan will have with no size limit.
 // All the contents of exifDataIn from the start of the exif block (if any)
 // will be held in memory.
-func GetFlatExifDataNoLimit(exifDataIn []byte) (exifTags []ExifTag, err error) {
+func GetFlatExifDataFromBytesNoLimit(exifDataIn []byte) (exifTags []ExifTag, err error) {
 	defer func() {
 		if state := recover(); state != nil {
 			err = log.Wrap(state.(error))
