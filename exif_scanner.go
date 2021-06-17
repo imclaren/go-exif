@@ -221,6 +221,7 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 		fmt.Println("copying bytes:", s.Current+s.scanLimit)
 
 		// Copy the file up to the s.scanLimit to the new file
+		_, err = s.r.Seek(0, io.SeekStart)
 		nBytes, err := io.CopyN(tempFile, s.r, s.Current+s.scanLimit)
 		if err != nil {
 			log.Panic(err)
