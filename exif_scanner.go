@@ -211,7 +211,7 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 
 		// Create tempFile
 		tempDir := os.TempDir()
-		tempFile, err := ioutil.TempFile(tempDir, "file.json")
+		tempFile, err := ioutil.TempFile(tempDir, "file.txt")
 		if err != nil {
 			return nil, err
 		}
