@@ -2,7 +2,6 @@ package exif
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -218,24 +217,17 @@ func (s *Scanner) GetFlatExifData() (exifTags []ExifTag, err error) {
 		}
 		defer os.Remove(tempFile.Name())
 
-		fmt.Println("copying bytes:", s.Size, s.Current, s.scanLimit, s.Current+s.scanLimit)
-
+		// Copy the file up to the s.scanLimit to the new file
 		newSize := s.Current + s.scanLimit
 		if newSize > s.Size {
 			newSize = s.Size
 		}
-
-		// Copy the file up to the s.scanLimit to the new file
 		_, err = s.r.Seek(0, io.SeekStart)
-		nBytes, err := io.CopyN(tempFile, s.r, newSize)
-		//nBytes, err := io.CopyN(tempFile, s.r, s.Size)
-		//_, err = io.Copy(tempFile, s.r)
+		_, err = io.CopyN(tempFile, s.r, newSize)
 		if err != nil {
 			log.Panic(err)
 		}
 		_, err = tempFile.Seek(s.Current, io.SeekStart)
-
-		fmt.Println("copied and new size:", nBytes, s.Current+s.scanLimit)
 
 		// Replace the reader with the temp file
 		s.r = tempFile
